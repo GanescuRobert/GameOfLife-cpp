@@ -54,3 +54,99 @@ Once the C++ compiler is installed, try compiling your MPI program using `mpic++
 If you still face issues, make sure to review your Conda environment configuration and verify that the required packages are installed correctly.
 
 <!-- https://github.com/TayfunKaraderi/Game-of-Life-In-Parallel/blob/master/Game_of_Life.cpp -->
+
+
+### Install opencv2 for c++
+
+In Linux, you can install OpenCV using the package manager. Here's how you can install OpenCV and resolve the "Package opencv was not found" error:
+
+1. **Update Package Lists**: Open a terminal and update the package lists on your system by running the following command:
+
+   ```
+   sudo apt update
+   ```
+
+2. **Install OpenCV Packages**: Install the OpenCV packages using the package manager. Run the following command:
+
+   ```
+   sudo apt install libopencv-dev
+   ```
+
+   This command will install the necessary OpenCV development packages, including the package configuration files needed by `pkg-config`.
+
+3. **Check OpenCV Installation**: Verify that OpenCV is installed correctly. Run the following command to display the installed OpenCV version:
+
+   ```
+   pkg-config --modversion opencv4
+   ```
+
+   If the command displays the version number of OpenCV, it means OpenCV is installed and configured properly.
+
+4. **Link OpenCV Libraries**: To link against the OpenCV libraries, you need to specify the linker flags during the compilation process. Open a terminal and compile your C++ code with the following command:
+
+   ```
+   g++ your_code.cpp -o your_executable `pkg-config --cflags --libs opencv4`
+   ```
+
+   This command uses the `pkg-config` tool to automatically determine the necessary compiler and linker flags for OpenCV.
+
+5. **Build and Run**: Finally, build your C++ code by running the generated executable:
+
+   ```
+   ./your_executable
+   ```
+
+These steps should help you install OpenCV, include the necessary headers in your C++ code, and compile and run your program using OpenCV functionality.
+
+
+The error message suggests that the linker (`ld`) is unable to find the `libGL` library. This usually indicates that the OpenGL development libraries are missing on your system.
+
+To resolve this issue, you can try installing the necessary OpenGL libraries using the package manager for your operating system. The package name may vary depending on your distribution.
+
+For example, on Ubuntu or Debian, you can try installing the following packages:
+
+```bash
+sudo apt-get install libgl1-mesa-dev
+sudo apt-get install libglu1-mesa-dev
+```
+
+On Fedora or CentOS, you can try:
+
+```bash
+sudo dnf install mesa-libGL-devel
+sudo dnf install mesa-libGLU-devel
+```
+
+Once the OpenGL development libraries are installed, you can try compiling your code again with the `-lGL` flag.
+
+
+
+
+## MPI
+
+### Build
+```
+mpic++ -std=c++11 GOL_parallel_linearity.cpp -o GOL_parallel_linearity -L/usr/local/lib -L/usr/lib `pkg-config --cflags opencv4` `pkg-config --libs opencv4` `pkg-config --libs opencv4` -lGL
+```
+
+## Generate video ( OPENCV)
+
+### Build
+```
+g++ generate_image_video.cpp -o generate_image_video.exe -I/home/rob/anaconda3/envs/gol/include/opencv4 -L/home/rob/anaconda3/envs/gol/lib -Wl,-rpath=/home/rob/anaconda3/envs/gol/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio
+```
+### Create video
+```
+./generate_image_video.exe "./secvential/output/life.txt"
+```
+
+## Cpp
+
+### Build
+```
+g++ -o main.exe main.cpp 
+```
+### Run 
+```
+./main.exe life
+```
