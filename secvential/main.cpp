@@ -6,6 +6,8 @@
 #include <vector>
 #include <chrono>
 #include <cstdio>
+#include <filesystem>
+#include <cmath>
 
 // `sys/stat.h` header is used to create a new directory in which output files will be saved as text files.
 #include <sys/stat.h>
@@ -17,6 +19,7 @@
 using namespace std;
 using namespace chrono;
 using namespace Constants;
+namespace fs = filesystem;
 
 /// @brief Validates if the cell is inside the grid.
 /// @param neighbRow the line the neighbor is on
@@ -103,25 +106,38 @@ vector<vector<int>> getNextGrid(vector<vector<int>> &grid)
 	return nextGrid;
 }
 
-/// @brief If it meets specific criteria, it saves the current iteration of the grid to a file.
+/// @brief If it meets specific criteria, it saves the current generation of the grid to a file.
 /// @param grid John Conway's Game of Life ( The grid )
 /// @param inputFilename the name of the input file
-/// @param iteration the generation number
-/// @return true if the current iteration is saved else false
-bool saveCurrentIteration(vector<vector<int>> &grid, string inputFilename, int iteration)
+/// @param generation the generation number
+/// @return true if the current generation is saved else false
+bool saveCurrentGeneration(Data &configuration, int generation)
 {
+	const vector<vector<int>> grid = configuration.grid;
 	const int size = grid.size();
-	if (size <= 4 * BORDER_SIZE || size <= 4 * BORDER_SIZE)
-		return false;
 
-	string folderName = "output/";
-	string fileExtension = ".txt";
-	string filePath = folderName + inputFilename + fileExtension;
+	if (size <= 4 * BORDER_SIZE)
+	{
+		return false;
+	}
+
+	const string folderName = "output/";
+	if (!fs::exists(folderName))
+	{
+		fs::create_directory(folderName);
+	}
+
+	const string fileExtension = ".txt";
+	const string outputFilename = configuration.inputFilename + "_" + to_string(configuration.numGenerations);
+	const string filePath = folderName + outputFilename + fileExtension;
+
 	ofstream outfile(filePath, ios::app);
 	if (!outfile)
+	{
 		return false;
+	}
 
-	outfile << iteration << ": ";
+	outfile << generation << ": ";
 	for (int row = BORDER_SIZE; row < size - BORDER_SIZE; ++row)
 	{
 		for (int col = BORDER_SIZE; col < size - BORDER_SIZE; ++col)
@@ -133,18 +149,20 @@ bool saveCurrentIteration(vector<vector<int>> &grid, string inputFilename, int i
 	return true;
 }
 
-/// @brief Initializes the grid based on the values stored in a string.
-/// @param grid John Conway's Game of Life ( The grid )
-/// @param strGrid the string representation of the grid
-void initGrid(vector<vector<int>> &grid, const string &strGrid)
+/// @brief Converts a string representation to a 2D vector of integers.
+/// @param str The string representation of the grid.
+/// @param size the number of rows and columns in the square grid
+/// @return The 2D vector of integers representing the grid.
+vector<vector<int>> stringToVector2D(const string &str, const int size)
 {
-	const int size = grid.size();
-	for (int i = 0; i < size * size; ++i)
+	vector<vector<int>> grid(size, vector<int>(size, 0));
+	for (int i = 0; i < str.size(); ++i)
 	{
 		int row = i / size;
 		int col = i % size;
-		grid[row][col] = strGrid[i] - '0';
+		grid[row][col] = str[i] - '0';
 	}
+	return grid;
 }
 
 /// @brief Splits the input data into individual words and returns a list with each word as an element.
@@ -283,13 +301,13 @@ void cleanBoarder(vector<vector<int>> &grid)
 /// @param argc the number of arguments entered on the command line
 /// @param argv the arguments entered on the command line
 /// @return the input filename (if present) or 'null' (if not).
-string getInputFilename(int argc, char **argv)
+pair<string, int> getInputData(int argc, char **argv)
 {
-	if (argc != 2)
+	if (argc != 3)
 	{
-		return "null";
+		return make_pair("null", 0);
 	}
-	return argv[1];
+	return make_pair(argv[1], stoi(argv[2]));
 }
 
 /// @brief Prepares a tuple containing useful data needed for the Game of Life simulation.
@@ -299,24 +317,19 @@ string getInputFilename(int argc, char **argv)
 Data prepareGameOfLife(int argc, char **argv)
 {
 	Data configuration;
-	const string inputFilename = getInputFilename(argc, argv);
+	auto [inputFilename, numGenerations] = getInputData(argc, argv);
 	if (inputFilename == "null")
 	{
 		configuration.inputFilename = inputFilename;
-		configuration.numGenerations = 0;
+		configuration.numGenerations = numGenerations;
 		configuration.grid = vector<vector<int>>();
 		return configuration;
 	}
-	setSysStdout(inputFilename);
-	const string inputData = readFile(inputFilename);
-	vector<string> words = deconstructInputData(inputData);
+	setSysStdout(inputFilename, numGenerations);
+	const string gridStr = readFile(inputFilename);
+	const int gridSize = static_cast<int>(sqrt(gridStr.size()));
 
-	const int size = stoi(words[0]);
-	const int numGenerations = stoi(words[1]);
-	const string strGrid = words[2];
-	vector<vector<int>> grid(size, vector<int>(size, 0));
-
-	initGrid(grid, strGrid);
+	vector<vector<int>> grid = stringToVector2D(gridStr, gridSize);
 	addBoarder(grid);
 
 	configuration.inputFilename = inputFilename;
@@ -325,16 +338,16 @@ Data prepareGameOfLife(int argc, char **argv)
 	return configuration;
 }
 
-/// @brief Simulates the Game of Life for a given number of generations, updates and saves the grid on each iteration.
-/// @param configuration {	input_filename: the input data filename
-///							num_generations: the number of generations
+/// @brief Simulates the Game of Life for a given number of generations, updates and saves the grid on each generation.
+/// @param configuration {	inputFilename: the input data filename
+///							numGenerations: the number of generations
 ///							grid: John Conway's Game of Life ( The grid )
 ///						}
 void saveGameOfLife(Data configuration)
 {
 	for (int generation = 0; generation < configuration.numGenerations; generation++)
 	{
-		if (saveCurrentIteration(configuration.grid, configuration.inputFilename, generation))
+		if (saveCurrentGeneration(configuration, generation))
 		{
 			vector<vector<int>> nextGrid = getNextGrid(configuration.grid);
 			updateGrid(configuration.grid, nextGrid);
@@ -343,9 +356,9 @@ void saveGameOfLife(Data configuration)
 	}
 }
 
-/// @brief Simulates the Game of Life for a given number of generations and updates the grid on each iteration.
-/// @param configuration {	input_filename: the input data filename
-///							num_generations: the number of generations
+/// @brief Simulates the Game of Life for a given number of generations and updates the grid on each generation.
+/// @param configuration {	inputFilename: the input data filename
+///							numGenerations: the number of generations
 ///							grid: John Conway's Game of Life ( The grid )
 ///						}
 void playGameOfLife(Data configuration)

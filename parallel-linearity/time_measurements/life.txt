@@ -1,4 +1,0 @@
-Function prepareGameOfLife = 0.0005284 seconds
-Function saveGameOfLife = 0.0033138 seconds
-Function playGameOfLife = 0.000785 seconds
-Game of life completed successfully

@@ -126,18 +126,18 @@ Once the OpenGL development libraries are installed, you can try compiling your 
 
 ### Build
 ```
-mpic++ -std=c++11 GOL_parallel_linearity.cpp -o GOL_parallel_linearity -L/usr/local/lib -L/usr/lib `pkg-config --cflags opencv4` `pkg-config --libs opencv4` `pkg-config --libs opencv4` -lGL
+mpic++ -std=c++17 GOL_parallel_linearity.cpp -o GOL_parallel_linearity -L/usr/local/lib -L/usr/lib `pkg-config --cflags opencv4` `pkg-config --libs opencv4` `pkg-config --libs opencv4` -lGL
 ```
 
 ## Generate video ( OPENCV)
 
 ### Build
 ```
-g++ generate_image_video.cpp -o generate_image_video.exe -I/home/rob/anaconda3/envs/gol/include/opencv4 -L/home/rob/anaconda3/envs/gol/lib -Wl,-rpath=/home/rob/anaconda3/envs/gol/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio
+g++ generateVideos.cpp -o generateVideos.exe -I/home/rob/anaconda3/envs/gol/include/opencv4 -L/home/rob/anaconda3/envs/gol/lib -Wl,-rpath=/home/rob/anaconda3/envs/gol/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio
 ```
 ### Create video
 ```
-./generate_image_video.exe "./secvential/output/life.txt"
+./generateVideos.exe cpp/secvential
 ```
 
 ## Cpp
@@ -150,3 +150,7 @@ g++ -o main.exe main.cpp
 ```
 ./main.exe life
 ```
+
+
+
+### Toti algoritmi se ruleaza din fisierul sau.
